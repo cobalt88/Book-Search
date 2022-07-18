@@ -1,31 +1,36 @@
 const express = require("express");
-const path = require("path");
-const db = require("./config/connection");
-// const routes = require('./routes');
-const { graphqlHttp } = require("express-graphql");
-const graphqlSchema = require("./graphql/schema");
-const graphqlResolver = require("./graphql/resolvers");
+const { ApolloServer } = require("apollo-server-express");
+const http = require("http");
 
 const app = express();
-const PORT = process.env.PORT || 3001;
 
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+const typeDefs = `
+    type Query{
+        totalPosts: Int!
+    }
+`;
+const resolvers = {
+  Query: {
+    totalPosts: () => 100,
+  },
+};
 
-// if we're in production, serve client/build as static assets
-if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../client/build")));
+async function startServer() {
+  apolloServer = new ApolloServer({
+    typeDefs,
+    resolvers,
+  });
+  await apolloServer.start();
+  apolloServer.applyMiddleware({ app });
 }
+startServer();
+const httpserver = http.createServer(app);
 
-// app.use(routes);
-app.use(
-  "/graphql",
-  graphqlHttp({
-    schema: graphqlSchema,
-    rootValue: graphqlResolver,
-  })
-);
+app.get("/rest", function (req, res) {
+  res.json({ data: "api working" });
+});
 
-db.once("open", () => {
-  app.listen(PORT, () => console.log(`🌍 Now listening on localhost:${PORT}`));
+app.listen(4000, function () {
+  console.log(`server running on port 4000`);
+  console.log(`gql path is ${apolloServer.graphqlPath}`);
 });
