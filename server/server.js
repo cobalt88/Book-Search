@@ -14,7 +14,7 @@ const resolvers = {
     totalPosts: () => 100,
   },
 };
-
+let apolloServer = null;
 async function startServer() {
   apolloServer = new ApolloServer({
     typeDefs,
